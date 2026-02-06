@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Boutique Eye | Atlantis RP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; overflow: hidden; touch-action: manipulation; }
+        .serif { font-family: 'Playfair Display', serif; }
+        .bg-overlay {
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
+                        url('/img/bg-boutique.jpg'); 
+            background-size: cover;
+            background-position: center;
+        }
+        #modal-wrapper {
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            visibility: hidden;
+            opacity: 0;
+            backdrop-filter: blur(0px);
+        }
+        #modal-wrapper.active {
+            visibility: visible;
+            opacity: 1;
+            backdrop-filter: blur(15px);
+        }
+        #registration-modal {
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transform: translateY(20px);
+            background: rgba(10, 10, 10, 0.98);
+            max-height: 85vh;
+            width: 90%; /* Occupa quasi tutto lo schermo su mobile */
+            max-width: 400px; /* Non esagera su desktop */
+            overflow-y: auto;
+        }
+        #modal-wrapper.active #registration-modal {
+            transform: translateY(0);
+        }
+        .input-line {
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            border-radius: 0;
+            font-size: 16px !important; /* Evita lo zoom automatico su iOS */
+        }
+        .input-line:focus {
+            border-bottom: 1px solid #eab308;
+            outline: none;
+        }
+        .field-container { position: relative; margin-top: 1.8rem; }
+        .field-label {
+            position: absolute;
+            left: 0;
+            top: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #777;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .input-line:focus + .field-label,
+        .input-line:not(:placeholder-shown) + .field-label {
+            top: -18px;
+            color: #eab308;
+            font-size: 9px;
+        }
+    </style>
+</head>
+<body class="bg-black text-white antialiased">
+
+    <section class="relative h-screen flex flex-col items-center justify-center text-center px-8 bg-overlay">
+        <div class="mb-4">
+            <h2 class="tracking-[0.4em] text-[10px] md:text-xs font-light text-yellow-600 uppercase">
+                Liberty Bay • Élite
+            </h2>
+        </div>
+
+        <div class="mb-8">
+            <h1 class="serif text-5xl md:text-9xl font-bold leading-none tracking-tight uppercase">Boutique</h1>
+            <h1 class="serif italic text-4xl md:text-8xl font-black text-yellow-500 -mt-2 md:-mt-6 lowercase tracking-widest">Eye</h1>
+            <div class="h-[1px] w-12 bg-yellow-600 mx-auto mt-8"></div>
+        </div>
+
+        <div class="max-w-xs md:max-w-xl mx-auto mb-10">
+            <p class="text-gray-300 font-light leading-relaxed tracking-wide text-[13px] md:text-base">
+                L'essenza del lusso. <br class="md:hidden"> Accedi per consultare il catalogo.
+            </p>
+        </div>
+
+        <div class="flex flex-col w-full max-w-[240px] md:max-w-none md:flex-row justify-center gap-4">
+            <button onclick="toggleModal(true)" class="bg-yellow-500 text-black px-10 py-4 text-[11px] md:text-xs tracking-[0.2em] font-bold uppercase shadow-2xl active:scale-95 transition-transform">
+                Accesso Clienti
+            </button>
+            <button class="border border-white/20 bg-white/5 backdrop-blur-sm px-10 py-4 text-[11px] md:text-xs tracking-[0.2em] font-bold uppercase text-gray-400">
+                Portale Interno
+            </button>
+        </div>
+    </section>
+
+    <div id="modal-wrapper" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+        <div id="registration-modal" class="border border-white/10 p-8 md:p-12 relative rounded-lg">
+            
+            <button onclick="toggleModal(false)" class="absolute top-4 right-4 text-white/40 p-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+
+            <div class="text-center mb-8">
+                <h2 id="modal-title" class="serif text-2xl md:text-3xl text-yellow-500 italic lowercase tracking-tighter">Registrazione</h2>
+                <div class="h-[1px] w-6 bg-yellow-600/30 mx-auto mt-4"></div>
+            </div>
+
+            <form id="auth-form" class="space-y-6">
+                <div class="field-container">
+                    <input type="text" id="mc-nick" placeholder=" " required class="input-line w-full py-3 text-white">
+                    <label class="field-label">Nickname Minecraft</label>
+                </div>
+                
+                <div id="extra-fields" class="space-y-6">
+                    <div class="field-container">
+                        <input type="text" id="rp-full-name" placeholder=" " required class="input-line w-full py-3 text-white">
+                        <label class="field-label">Nome e Cognome RP</label>
+                    </div>
+
+                    <div class="field-container">
+                        <input type="text" id="tg-user" placeholder=" " required class="input-line w-full py-3 text-white">
+                        <label class="field-label">Username Telegram</label>
+                    </div>
+                </div>
+                
+                <div class="pt-6 text-center">
+                    <button type="submit" id="submit-btn" class="w-full bg-white text-black font-bold py-4 uppercase text-[11px] tracking-[0.3em] active:bg-yellow-500 transition-colors">
+                        Conferma
+                    </button>
+                    <button type="button" onclick="toggleAuthMode()" id="switch-btn" class="mt-6 text-[10px] uppercase tracking-[0.2em] text-yellow-600 block w-full text-center underline">Hai già un profilo? Accedi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+    <script>
+        let isLoginMode = false;
+        function toggleModal(show) {
+            document.getElementById('modal-wrapper').classList.toggle('active', show);
+        }
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            const title = document.getElementById('modal-title');
+            const extraFields = document.getElementById('extra-fields');
+            const submitBtn = document.getElementById('submit-btn');
+            const switchBtn = document.getElementById('switch-btn');
+            const inputs = extraFields.querySelectorAll('input');
+
+            if (isLoginMode) {
+                title.innerText = "Accesso Clienti";
+                submitBtn.innerText = "Entra";
+                switchBtn.innerText = "Nuovo cliente? Registrati";
+                extraFields.style.display = 'none';
+                inputs.forEach(i => i.required = false);
+            } else {
+                title.innerText = "Registrazione";
+                submitBtn.innerText = "Conferma";
+                switchBtn.innerText = "Hai già un profilo? Accedi";
+                extraFields.style.display = 'block';
+                inputs.forEach(i => i.required = true);
+            }
+        }
+        document.getElementById('modal-wrapper').addEventListener('click', function(e) {
+            if (e.target === this) toggleModal(false);
+        });
+    </script>
+</body>
+</html>
