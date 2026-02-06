@@ -1,7 +1,0 @@
-{
-  "name": "BoutiqueEye",
-  "description": "",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}
