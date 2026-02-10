@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogo - Boutique Eye</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a0a; color: white; }
+        .font-serif { font-family: 'Cinzel', serif; }
+        .text-gold { color: #d4af37; }
+        .border-gold { border-color: #d4af37; }
+        .bg-gold { background-color: #d4af37; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #cart-count {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(1);
+        }
+        #cart-count:not(.hidden) { animation: popIn 0.3s forwards; }
+        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .animate-slide-in { animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c5a059; }
+        @keyframes slide-in {from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); }}
+        .animate-slide-in { animation: slide-in 0.5s ease-out; }
+    </style>
+</head>
+<body>
+
+    <header class="flex justify-between items-center px-6 md:px-12 py-6 border-b border-white/10">
+        <div class="text-xl md:text-2xl font-serif tracking-widest uppercase">
+            Boutique<span class="text-gold">Eye</span>
+        </div>
+        
+        <nav class="hidden md:flex space-x-8 text-xs tracking-widest uppercase text-gray-400">
+            <a href="#" class="text-gold border-b border-gold pb-1">Collezioni</a>
+            <a href="#" class="hover:text-white transition">Fidelity</a>
+        </nav>
+    
+        <div class="flex items-center space-x-6 md:space-x-8">
+            <div class="flex items-center space-x-6 md:space-x-8">
+                <div onclick="openOrdersModal()" class="relative cursor-pointer group flex flex-col items-center transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-1 text-gray-400 group-hover:text-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <span class="text-[8px] tracking-[0.2em] uppercase text-gray-500 group-hover:text-gold transition-colors">Ordini</span>
+                </div>
+    
+                <div id="cart-trigger" onclick="openCheckout()" class="relative cursor-pointer group flex flex-col items-center opacity-30 pointer-events-none transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-1 text-gray-400 group-hover:text-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span class="text-[8px] tracking-[0.2em] uppercase text-gray-500 group-hover:text-gold transition-colors">Carrello</span>
+                    <span id="cart-count" class="absolute -top-1 -right-2 bg-gold text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-black hidden shadow-lg">0</span>
+                </div>
+            </div>
+    
+            <div class="flex items-center space-x-4 border-l border-white/10 pl-4 md:pl-8">
+                <div class="text-right hidden md:block">
+                    <p id="user-name" class="text-[10px] font-bold uppercase tracking-tighter text-white">Caricamento...</p>
+                    <p class="text-[9px] text-gold uppercase tracking-widest">Cliente</p>
+                </div>
+                <div class="w-8 h-8 md:w-10 md:h-10 border border-gold/30 p-0.5 bg-zinc-900">
+                    <img src="" alt="Avatar" id="user-avatar" class="w-full h-full object-cover">
+                </div>
+                <button id="logout-btn" class="text-gray-600 hover:text-red-500 transition-colors ml-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-col md:flex-row px-6 md:px-12 py-10">
+        <aside class="w-full md:w-64 md:pr-12 mb-10 md:mb-0">
+            <h2 class="text-xs font-bold tracking-[0.2em] text-gray-500 mb-6 uppercase border-b border-white/10 pb-2">Sezioni</h2>
+            <ul id="filter-list" class="space-y-4 text-xs font-semibold tracking-widest uppercase flex flex-row md:flex-col overflow-x-auto md:overflow-visible pb-4 md:pb-0 gap-6 md:gap-0">
+                <li data-category="tutti" class="filter-item text-gold border-gold cursor-pointer flex justify-between items-center transition border-b-2 md:border-b-0 md:border-l-2 pb-2 md:pb-0 pl-0 md:pl-2 shrink-0">
+                    Tutti <span class="hidden md:inline">&rsaquo;</span>
+                </li>
+                <li data-category="Interior" class="filter-item text-zinc-500 border-transparent hover:text-white cursor-pointer transition border-b-2 md:border-b-0 md:border-l-2 pb-2 md:pb-0 pl-0 md:pl-2 shrink-0">Interior</li>
+                <li data-category="Boutique" class="filter-item text-zinc-500 border-transparent hover:text-white cursor-pointer transition border-b-2 md:border-b-0 md:border-l-2 pb-2 md:pb-0 pl-0 md:pl-2 shrink-0">Boutique</li>
+                <li data-category="Gioielleria" class="filter-item text-zinc-500 border-transparent hover:text-white cursor-pointer transition border-b-2 md:border-b-0 md:border-l-2 pb-2 md:pb-0 pl-0 md:pl-2 shrink-0">Gioielleria</li>
+                <li data-category="Abbigliamento" class="filter-item text-zinc-500 border-transparent hover:text-white cursor-pointer transition border-b-2 md:border-b-0 md:border-l-2 pb-2 md:pb-0 pl-0 md:pl-2 shrink-0">Abbigliamento</li>
+            </ul>
+            <div class="mt-10 md:mt-20 p-6 border border-white/10 bg-zinc-900/50 hidden md:block">
+                <h3 class="font-serif text-sm mb-3">Messaggio</h3>
+                <p class="text-[11px] text-gray-400 italic leading-relaxed">
+                    "L'eleganza non è farsi notare, ma farsi ricordare." <br><br>
+                    Scegli con cura i tuoi pezzi per definire il tuo stile.
+                </p>
+            </div>
+        </aside>
+
+        <main class="flex-1">
+            <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            </div>
+        </main>
+    </div>
+
+    <div id="product-modal" class="fixed inset-0 z-[100] hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-zinc-950 border border-gold/20 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row shadow-2xl">
+            
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-gold z-10 text-2xl font-light">&times;</button>
+            
+            <div class="w-full md:w-1/2 bg-zinc-900 flex items-center justify-center h-64 md:h-auto">
+                <img id="modal-img" src="" class="w-full h-full object-cover opacity-90">
+            </div>
+
+            <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col">
+                <div class="mb-6">
+                    <span id="modal-category" class="text-[10px] uppercase tracking-[0.3em] text-zinc-500 block mb-2"></span>
+                    <h2 id="modal-title" class="font-serif italic text-2xl md:text-3xl text-gold mb-1 leading-tight"></h2>
+                    <span id="modal-collection" class="text-[10px] uppercase tracking-[0.2em] text-gold/60 italic"></span>
+                </div>
+
+                <p id="modal-description" class="text-zinc-400 font-light text-sm leading-relaxed mb-8 italic"></p>
+
+                <div class="mt-auto">
+                    <p id="modal-price" class="text-2xl text-white font-sans font-light mb-6 tracking-tight"></p>
+                    
+                    <div class="flex flex-col gap-3">
+                        <button onclick="startCheckout()" class="w-full bg-gold text-black py-4 text-xs uppercase tracking-[0.2em] font-bold hover:bg-white transition-colors duration-500">ACQUISTA ORA</button>
+                        
+                        <button onclick="addToCart()" class="w-full border border-gold/30 text-gold py-4 text-xs uppercase tracking-[0.2em] hover:bg-gold/10 transition-colors duration-500">Aggiungi al Carrello</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="checkout-modal" class="fixed inset-0 z-[110] hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-zinc-950 border border-gold/20 w-full max-w-lg p-8 shadow-2xl relative">
+            <button onclick="closeCheckout()" class="absolute top-4 right-4 text-zinc-500 hover:text-gold text-2xl font-light">&times;</button>
+            
+            <h2 class="font-serif italic text-2xl text-gold mb-8 text-center border-b border-gold/10 pb-4">Riepilogo Ordine</h2>
+
+            <div class="space-y-4 mb-8">
+                <span class="text-[10px] uppercase tracking-widest text-zinc-500 block">Metodo di Consegna</span>
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="btn-ritiro" onclick="selectDelivery('ritiro')" class="py-4 border border-white/10 text-[10px] uppercase tracking-widest text-zinc-500 hover:bg-white/5 transition-all">Ritiro in sede</button>
+                    <button id="btn-consegna" onclick="selectDelivery('consegna')" class="py-4 border border-white/10 text-[10px] uppercase tracking-widest text-zinc-500 hover:bg-white/5 transition-all">Consegna (+15%)</button>
+                </div>
+            </div>
+
+            <div id="address-container" class="hidden mb-8 animate-fade-in">
+                <span class="text-[10px] uppercase tracking-widest text-zinc-500 block mb-2">Coordinate GPS</span>
+                <input type="text" id="delivery-address" placeholder="X: 100, Y: 70, Z: -200" 
+                       class="w-full bg-zinc-900 border border-gold/20 p-4 text-white text-sm focus:border-gold outline-none transition-all">
+            </div>
+
+            <div class="flex justify-between items-center mb-8 bg-zinc-900/50 p-4 border border-gold/5">
+                <span class="text-[10px] uppercase tracking-widest text-zinc-500">Totale Stimato:</span>
+                <span id="checkout-total" class="text-xl text-white font-light font-sans">€ 0</span>
+            </div>
+            
+            <button id="confirm-purchase-btn" onclick="processOrder()" class="w-full bg-gold text-black py-4 text-xs uppercase tracking-[0.2em] font-bold hover:bg-white transition-all disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+                INVIA ORDINE
+            </button>
+        </div>
+    </div>
+
+    <div id="cart-modal" class="fixed inset-0 z-[105] hidden bg-black/90 backdrop-blur-sm flex justify-end">
+        <div class="bg-zinc-950 border-l border-gold/20 w-full max-w-md p-8 flex flex-col shadow-2xl animate-slide-in">
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="font-serif italic text-2xl text-gold">Il tuo Carrello</h2>
+                <button onclick="closeCart()" class="text-zinc-500 hover:text-white text-2xl">&times;</button>
+            </div>
+
+            <div id="cart-items-container" class="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-gold/10">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="text-[10px] uppercase tracking-widest text-zinc-500">Subtotale:</span>
+                    <span id="cart-subtotal" class="text-xl text-white font-light"></span>
+                </div>
+                
+                <button onclick="goToCheckout()" class="w-full bg-gold text-black py-4 text-xs uppercase tracking-[0.2em] font-bold hover:bg-white transition-all">
+                    PROCEDI AL CHECKOUT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="orders-modal" class="fixed inset-0 z-[120] hidden bg-black/95 backdrop-blur-md flex justify-center items-end md:items-center p-0 md:p-4">
+        <div class="bg-zinc-950 border-t md:border border-gold/20 w-full md:max-w-4xl h-[90vh] md:h-auto md:max-h-[85vh] p-6 md:p-8 flex flex-col shadow-2xl fade-in relative rounded-t-2xl md:rounded-none">
+            
+            <button onclick="closeOrdersModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-3xl md:text-2xl font-light">&times;</button>
+            
+            <div class="mb-6 md:mb-8 mt-2 md:mt-0">
+                <h2 class="font-serif italic text-2xl md:text-3xl text-gold">Archivio Ordini</h2>
+                <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-500 mt-2">Cronologia completa dei tuoi acquisti</p>
+            </div>
+    
+            <div class="hidden md:grid grid-cols-12 gap-4 pb-4 border-b border-gold/10 text-[10px] uppercase tracking-widest text-zinc-500 font-bold px-2">
+                <div class="col-span-2">Data</div>
+                <div class="col-span-5">Articoli</div>
+                <div class="col-span-2 text-center">Stato</div>
+                <div class="col-span-1 text-center">Metodo</div>
+                <div class="col-span-2 text-right">Totale</div>
+            </div>
+    
+            <div id="orders-container" class="flex-1 overflow-y-auto custom-scrollbar mt-2 pr-2 space-y-4 md:space-y-0 pb-10 md:pb-0">
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>

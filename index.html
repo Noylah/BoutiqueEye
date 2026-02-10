@@ -67,6 +67,23 @@
             color: #eab308;
             font-size: 9px;
         }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #09090b inset !important; 
+            -webkit-text-fill-color: #ffffff !important; 
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        input:focus {
+            color: #d4af37 !important; 
+            background-color: #09090b !important; 
+            outline: none !important; 
+            border-color: #d4af37 !important; 
+        }
+        input {
+            caret-color: #ffffff; 
+        }
     </style>
 </head>
 <body class="bg-black text-white antialiased">
@@ -109,7 +126,7 @@
             </button>
 
             <div class="text-center mb-8">
-                <h2 id="modal-title" class="serif text-2xl md:text-3xl text-yellow-500 italic lowercase tracking-tighter">Registrazione</h2>
+                <h2 id="modal-title" class="serif text-2xl md:text-3xl text-yellow-500 italic uppercase tracking-tighter">Registrazione</h2>
                 <div class="h-[1px] w-6 bg-yellow-600/30 mx-auto mt-4"></div>
             </div>
 
@@ -149,6 +166,7 @@
         }
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
+            window.isLoginMode = isLoginMode;
             const title = document.getElementById('modal-title');
             const extraFields = document.getElementById('extra-fields');
             const submitBtn = document.getElementById('submit-btn');

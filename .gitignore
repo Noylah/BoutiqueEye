@@ -21,3 +21,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.supabase/
+supabase/.temp/
+supabase/functions/.env
