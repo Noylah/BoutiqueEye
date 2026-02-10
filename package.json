@@ -1,7 +1,7 @@
 {
-  "name": "boutiqueeye",
+  "name": "boutique-eye",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,10 +9,6 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "supabase": "^2.76.2",
-    "vite": "^7.2.4"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.95.3"
+    "vite": "^5.0.0"
   }
 }
