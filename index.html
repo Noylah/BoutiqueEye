@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Boutique Eye | Liberty Bay</title>
+    <title>Boutique Eye</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Montserrat', sans-serif; overflow: hidden; touch-action: manipulation; }
         .serif { font-family: 'Playfair Display', serif; }
         .bg-overlay {
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)),
                         url('img/bg-boutique.jpg'); 
             background-size: cover;
             background-position: center;
@@ -46,7 +46,7 @@
             font-size: 16px !important; 
         }
         .input-line:focus {
-            border-bottom: 1px solid #eab308;
+            border-bottom: 1px solid #d4af37;
             outline: none;
         }
         .field-container { position: relative; margin-top: 1.8rem; }
@@ -64,26 +64,11 @@
         .input-line:focus + .field-label,
         .input-line:not(:placeholder-shown) + .field-label {
             top: -18px;
-            color: #eab308;
+            color: #d4af37;
             font-size: 9px;
         }
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0 1000px #09090b inset !important; 
-            -webkit-text-fill-color: #ffffff !important; 
-            transition: background-color 5000s ease-in-out 0s;
-        }
-        input:focus {
-            color: #d4af37 !important; 
-            background-color: #09090b !important; 
-            outline: none !important; 
-            border-color: #d4af37 !important; 
-        }
-        input {
-            caret-color: #ffffff; 
-        }
+        .staff-mode { border-color: #3b82f6 !important; }
+        .staff-text { color: #3b82f6 !important; }
     </style>
 </head>
 <body class="bg-black text-white antialiased">
@@ -102,17 +87,17 @@
         </div>
 
         <div class="max-w-xs md:max-w-xl mx-auto mb-10">
-            <p class="text-gray-300 font-light leading-relaxed tracking-wide text-[13px] md:text-base">
-                Boutique di lusso e alta moda. Accedi per consultare il 
-                nostro catalogo ed effettuare ordini.
+            <p class="text-gray-300 font-light leading-relaxed tracking-wide text-[13px] md:text-base italic">
+                Boutique di lusso e alta moda. Accedi per consultare il nostro
+                catalogo ed effettuare ordini.
             </p>
         </div>
 
         <div class="flex flex-col w-full max-w-[240px] md:max-w-none md:flex-row justify-center gap-4">
-            <button onclick="toggleModal(true)" class="bg-yellow-500 text-black px-10 py-4 text-[11px] md:text-xs tracking-[0.2em] font-bold uppercase shadow-2xl active:scale-95 transition-transform">
+            <button onclick="openAuth('client')" class="bg-yellow-500 text-black px-10 py-4 text-[11px] md:text-xs tracking-[0.2em] font-bold uppercase shadow-2xl active:scale-95 transition-transform">
                 Accesso Clienti
             </button>
-            <button class="border border-white/20 bg-white/5 backdrop-blur-sm px-10 py-4 text-[11px] md:text-xs tracking-[0.2em] font-bold uppercase text-gray-400">
+            <button onclick="openAuth('staff')" class="border border-white/20 bg-white/5 backdrop-blur-sm px-10 py-4 text-[11px] md:text-xs tracking-[0.2em] font-bold uppercase text-gray-400 hover:text-blue-400 hover:border-blue-400/50 transition-all">
                 Portale Interno
             </button>
         </div>
@@ -121,13 +106,13 @@
     <div id="modal-wrapper" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
         <div id="registration-modal" class="border border-white/10 p-8 md:p-12 relative rounded-lg">
             
-            <button onclick="toggleModal(false)" class="absolute top-4 right-4 text-white/40 p-2">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-white/40 p-2">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
 
             <div class="text-center mb-8">
                 <h2 id="modal-title" class="serif text-2xl md:text-3xl text-yellow-500 italic uppercase tracking-tighter">Registrazione</h2>
-                <div class="h-[1px] w-6 bg-yellow-600/30 mx-auto mt-4"></div>
+                <div id="title-line" class="h-[1px] w-6 bg-yellow-600/30 mx-auto mt-4"></div>
             </div>
 
             <form id="auth-form" class="space-y-6">
@@ -138,13 +123,20 @@
                 
                 <div id="extra-fields" class="space-y-6">
                     <div class="field-container">
-                        <input type="text" id="rp-full-name" placeholder=" " required class="input-line w-full py-3 text-white">
+                        <input type="text" id="rp-full-name" placeholder=" " class="input-line w-full py-3 text-white">
                         <label class="field-label">Nome e Cognome RP</label>
                     </div>
 
                     <div class="field-container">
-                        <input type="text" id="tg-user" placeholder=" " required class="input-line w-full py-3 text-white">
+                        <input type="text" id="tg-user" placeholder=" " class="input-line w-full py-3 text-white">
                         <label class="field-label">Username Telegram</label>
+                    </div>
+                </div>
+
+                <div id="staff-fields" class="space-y-6 hidden">
+                    <div class="field-container">
+                        <input type="password" id="staff-pass" placeholder=" " class="input-line w-full py-3 text-white">
+                        <label class="field-label staff-text">Chiave di Accesso Staff</label>
                     </div>
                 </div>
                 
@@ -160,35 +152,76 @@
 
     <script type="module" src="src/main.js"></script>
     <script>
-        let isLoginMode = false;
-        function toggleModal(show) {
-            document.getElementById('modal-wrapper').classList.toggle('active', show);
+        let currentMode = 'register';
+
+        function openAuth(type) {
+            const wrapper = document.getElementById('modal-wrapper');
+            wrapper.classList.add('active');
+            
+            if (type === 'staff') {
+                setMode('staff');
+            } else {
+                setMode('register');
+            }
         }
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            window.isLoginMode = isLoginMode;
+
+        function closeModal() {
+            document.getElementById('modal-wrapper').classList.remove('active');
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            window.authMode = mode; 
+            
             const title = document.getElementById('modal-title');
             const extraFields = document.getElementById('extra-fields');
+            const staffFields = document.getElementById('staff-fields');
             const submitBtn = document.getElementById('submit-btn');
             const switchBtn = document.getElementById('switch-btn');
-            const inputs = extraFields.querySelectorAll('input');
+            const titleLine = document.getElementById('title-line');
 
-            if (isLoginMode) {
+            title.classList.remove('text-blue-500');
+            title.classList.add('text-yellow-500');
+            titleLine.className = "h-[1px] w-6 bg-yellow-600/30 mx-auto mt-4";
+
+            if (mode === 'staff') {
+                title.innerText = "Portale Staff";
+                title.classList.replace('text-yellow-500', 'text-blue-500');
+                titleLine.className = "h-[1px] w-6 bg-blue-600/30 mx-auto mt-4";
+                submitBtn.innerText = "Accedi al Desk";
+                switchBtn.innerText = "Torna all'area clienti";
+                extraFields.style.display = 'none';
+                staffFields.classList.remove('hidden');
+                document.getElementById('staff-pass').required = true;
+            } else if (mode === 'login') {
                 title.innerText = "Accesso Clienti";
                 submitBtn.innerText = "Entra";
                 switchBtn.innerText = "Nuovo cliente? Registrati";
                 extraFields.style.display = 'none';
-                inputs.forEach(i => i.required = false);
+                staffFields.classList.add('hidden');
+                document.getElementById('staff-pass').required = false;
             } else {
                 title.innerText = "Registrazione";
                 submitBtn.innerText = "Conferma";
                 switchBtn.innerText = "Hai già un profilo? Accedi";
                 extraFields.style.display = 'block';
-                inputs.forEach(i => i.required = true);
+                staffFields.classList.add('hidden');
+                document.getElementById('staff-pass').required = false;
             }
         }
+
+        function toggleAuthMode() {
+            if (currentMode === 'staff') {
+                setMode('register');
+            } else if (currentMode === 'register') {
+                setMode('login');
+            } else {
+                setMode('register');
+            }
+        }
+
         document.getElementById('modal-wrapper').addEventListener('click', function(e) {
-            if (e.target === this) toggleModal(false);
+            if (e.target === this) closeModal();
         });
     </script>
 </body>

@@ -8,6 +8,16 @@ let carrello = [];
 let allProducts = [];
 let selectedMethod = null;
 let currentProduct = null;
+let scontoAttivo = 0;
+let usatoScontoInSessione = false;
+
+const LIVELLI_FIDELITY = [
+    { nome: 'Bronzo', soglia: 0, sconto: 0 },
+    { nome: 'Argento', soglia: 500, sconto: 5 },
+    { nome: 'Oro', soglia: 1000, sconto: 10 },
+    { nome: 'Platino', soglia: 2500, sconto: 15 },
+    { nome: 'Diamante', soglia: 5000, sconto: 20 }
+];
 
 const generaCodice = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -45,17 +55,40 @@ const showStatus = (message, type = 'error') => {
     container.innerHTML = message;
 };
 
+const handleStaffLogin = async (nickname, password) => {
+    const fullEmail = `${nickname.toLowerCase()}@boutiqueye.it`;
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: fullEmail,
+            password: password,
+        });
+        if (error) throw error;
+        localStorage.setItem('staff_session', JSON.stringify(data.session));
+        window.location.href = 'dashboard-staff.html';
+    } catch (error) {
+        showStatus("Accesso Staff negato: " + error.message);
+    }
+};
+
 const authForm = document.getElementById('auth-form');
 if (authForm) {
     authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const mcNick = document.getElementById('mc-nick').value.trim();
+        const mode = window.authMode || (window.isLoginMode ? 'login' : 'register');
+        
+        if (mode === 'staff') {
+            const password = document.getElementById('staff-pass').value;
+            await handleStaffLogin(mcNick, password);
+            return;
+        }
+
         const codice = generaCodice();
         const btn = authForm.querySelector('button[type="submit"]');
         btn.disabled = true; btn.innerText = "ATTENDERE...";
         try {
             let userId = null;
-            if (window.isLoginMode) {
+            if (mode === 'login') {
                 const { data, error } = await supabase.from('profili').update({ codice_verifica: codice, sessione_attiva: false }).eq('mc_nickname', mcNick).select();
                 if (error || !data.length) throw new Error("Utente non trovato.");
                 userId = data[0].id;
@@ -87,12 +120,55 @@ async function avviaPolling(userId) {
     }, 2000);
 }
 
+function getScontoLivello(punti) {
+    let sconto = 0;
+    for (let i = LIVELLI_FIDELITY.length - 1; i >= 0; i--) {
+        if (punti >= LIVELLI_FIDELITY[i].soglia) {
+            sconto = LIVELLI_FIDELITY[i].sconto;
+            break;
+        }
+    }
+    return sconto;
+}
+
+window.applyFidelityCode = async () => {
+    const code = document.getElementById('fidelity-code-input').value.trim().toUpperCase();
+    const msg = document.getElementById('fidelity-msg');
+    if (!code) return;
+    const { data: user, error } = await supabase.from('profili').select('punti_totali, ultimo_sconto_usato').eq('codice_sconto_fidelity', code).single();
+    if (error || !user) {
+        msg.innerText = "Codice non valido";
+        msg.className = "text-[9px] uppercase tracking-widest mt-2 text-red-500 block";
+        scontoAttivo = 0;
+        calculateTotal();
+        return;
+    }
+    const ultimaData = user.ultimo_sconto_usato ? new Date(user.ultimo_sconto_usato) : null;
+    const oggi = new Date();
+    const diffDays = ultimaData ? (oggi - ultimaData) / (1000 * 60 * 60 * 24) : 999;
+    if (diffDays < 7) {
+        msg.innerText = `Coupon già usato. Disponibile tra ${Math.ceil(7 - diffDays)} giorni`;
+        msg.className = "text-[9px] uppercase tracking-widest mt-2 text-orange-500 block";
+        scontoAttivo = 0;
+    } else {
+        scontoAttivo = getScontoLivello(user.punti_totali);
+        usatoScontoInSessione = true;
+        msg.innerText = `Sconto ${scontoAttivo}% attivato`;
+        msg.className = "text-[9px] uppercase tracking-widest mt-2 text-gold block";
+        document.getElementById('discount-applied-label').classList.remove('hidden');
+    }
+    calculateTotal();
+};
+
 async function initCatalogo() {
     const session = localStorage.getItem('user_session');
     if (!session) { window.location.href = 'index.html'; return; }
     const user = JSON.parse(session);
-    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = user.rp_nome_cognome;
-    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').src = `https://nmsr.nickac.dev/face/${user.mc_nickname}`;
+    const { data: updatedUser } = await supabase.from('profili').select('*').eq('id', user.id).single();
+    if (updatedUser) localStorage.setItem('user_session', JSON.stringify(updatedUser));
+    const currentUser = updatedUser || user;
+    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = currentUser.rp_nome_cognome;
+    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').src = `https://nmsr.nickac.dev/face/${currentUser.mc_nickname}`;
     const { data: prodotti } = await supabase.from('prodotti').select('*');
     if (prodotti) { 
         allProducts = prodotti; 
@@ -119,6 +195,9 @@ function renderProducts(list) {
                     <div class="group cursor-pointer" onclick='openProduct(${JSON.stringify(p).replace(/'/g, "&apos;")})'>
                         <div class="bg-zinc-900 aspect-[4/5] overflow-hidden flex items-center justify-center border border-zinc-800/50 group-hover:border-gold/40 transition-all duration-700 shadow-2xl relative">
                             <img src="${p.immagine_url}" class="w-full h-full object-cover transition duration-[1.5s] group-hover:scale-110 opacity-90">
+                            <div class="absolute top-2 right-2 bg-black/60 px-2 py-1 border border-gold/20">
+                                <p class="text-[9px] text-gold uppercase tracking-widest">+${p.punti_valore || 0} pts</p>
+                            </div>
                         </div>
                         <div class="mt-5 text-center">
                             <h3 class="font-serif text-sm tracking-[0.2em] uppercase text-gold">${p.nome}</h3>
@@ -157,6 +236,26 @@ window.openProduct = (product) => {
     document.getElementById('modal-category').innerText = product.categoria || 'Nessuna Categoria';
     document.getElementById('modal-collection').innerText = product.collezione || 'Nessuna Collezione';
     document.getElementById('modal-description').innerText = product.descrizione || "Nessuna descrizione.";
+    
+    const colorContainer = document.getElementById('modal-colors-container');
+    const colorWrapper = document.getElementById('modal-colors-wrapper');
+    
+    if (product.colori && colorWrapper) {
+        const listaColori = Array.isArray(product.colori) 
+            ? product.colori 
+            : product.colori.split(',').map(c => c.trim());
+
+        colorWrapper.innerHTML = listaColori.map(hex => `
+            <div class="w-8 h-8 rounded-full border border-white/10 shadow-inner" 
+                 style="background-color: ${hex};" 
+                 title="${hex}">
+            </div>
+        `).join('');
+        colorContainer.classList.remove('hidden');
+    } else if (colorContainer) {
+        colorContainer.classList.add('hidden');
+    }
+
     document.getElementById('product-modal').classList.remove('hidden');
 };
 
@@ -251,6 +350,8 @@ window.startCheckout = () => {
     document.getElementById('product-modal').classList.add('hidden');
     document.getElementById('checkout-modal').classList.remove('hidden');
     selectedMethod = null;
+    scontoAttivo = 0;
+    usatoScontoInSessione = false;
     calculateTotal(); 
 };
 
@@ -258,6 +359,8 @@ window.goToCheckout = () => {
     document.getElementById('cart-modal').classList.add('hidden');
     document.getElementById('checkout-modal').classList.remove('hidden');
     selectedMethod = null;
+    scontoAttivo = 0;
+    usatoScontoInSessione = false;
     calculateTotal();
 };
 
@@ -285,29 +388,66 @@ function calculateTotal() {
         if(document.getElementById('checkout-total')) document.getElementById('checkout-total').innerText = "€ 0";
         return;
     }
-    const subtotal = carrello.reduce((acc, item) => acc + (Number(item.prezzo) * item.quantita), 0);
+    let subtotal = 0;
+    let scontatiCount = 0;
+    const listaEspansa = [];
+    carrello.forEach(item => {
+        for(let i=0; i<item.quantita; i++) listaEspansa.push(Number(item.prezzo));
+    });
+    listaEspansa.sort((a, b) => b - a);
+    listaEspansa.forEach(prezzo => {
+        if (scontoAttivo > 0 && scontatiCount < 5) {
+            subtotal += prezzo * (1 - scontoAttivo / 100);
+            scontatiCount++;
+        } else {
+            subtotal += prezzo;
+        }
+    });
     const finalPrice = selectedMethod === 'consegna' ? subtotal * 1.15 : subtotal;
     const totalEl = document.getElementById('checkout-total');
     if (totalEl) totalEl.innerText = `€ ${Math.round(finalPrice).toLocaleString()}`;
 }
 
+function calcolaPuntiCarrello(articoli) {
+    return articoli.reduce((acc, item) => acc + (Number(item.punti_valore || 0) * item.quantita), 0);
+}
+
 window.processOrder = async () => {
     const user = JSON.parse(localStorage.getItem('user_session'));
-    const subtotal = carrello.reduce((acc, item) => acc + (Number(item.prezzo) * item.quantita), 0);
-    const finalPrice = selectedMethod === 'consegna' ? subtotal * 1.15 : subtotal;
     const address = document.getElementById('delivery-address').value;
     if (selectedMethod === 'consegna' && !address) {
         showToast("Inserisci coordinate", 'error');
         return;
     }
-    const { error } = await supabase.from('ordini').insert([{
+    let subtotal = 0;
+    let scontatiCount = 0;
+    const listaEspansa = [];
+    carrello.forEach(item => {
+        for(let i=0; i<item.quantita; i++) listaEspansa.push(Number(item.prezzo));
+    });
+    listaEspansa.sort((a, b) => b - a);
+    listaEspansa.forEach(prezzo => {
+        if (scontoAttivo > 0 && scontatiCount < 5) {
+            subtotal += prezzo * (1 - scontoAttivo / 100);
+            scontatiCount++;
+        } else {
+            subtotal += prezzo;
+        }
+    });
+    const finalPrice = Math.round(selectedMethod === 'consegna' ? subtotal * 1.15 : subtotal);
+    const puntiGenerati = calcolaPuntiCarrello(carrello);
+    const { error: orderError } = await supabase.from('ordini').insert([{
         utente_id: user.id,
         metodo_consegna: selectedMethod,
         indirizzo_coordinate: selectedMethod === 'consegna' ? address : 'Ritiro in sede',
-        prezzo_finale: Math.round(finalPrice),
-        lista_prodotti: carrello
+        prezzo_finale: finalPrice,
+        lista_prodotti: carrello,
+        punti_generati: puntiGenerati
     }]);
-    if (!error) {
+    if (!orderError) {
+        if (usatoScontoInSessione && scontoAttivo > 0) {
+            await supabase.from('profili').update({ ultimo_sconto_usato: new Date().toISOString() }).eq('id', user.id);
+        }
         showToast("Ordine Confermato", 'success');
         carrello = [];
         setTimeout(() => window.location.reload(), 1500);
@@ -336,15 +476,12 @@ window.openOrdersModal = async () => {
         if (stato === "In Preparazione") statoClass = "text-blue-400 border-blue-500/30 bg-blue-500/5";
         if (stato === "Pronto") statoClass = "text-emerald-400 border-emerald-500/30 bg-emerald-500/5";
         if (stato === "Rifiutato") statoClass = "text-red-400 border-red-500/30 bg-red-500/5";
-        
         return `
             <div class="flex flex-col md:grid md:grid-cols-12 gap-y-4 md:gap-4 items-start md:items-center py-5 md:py-6 border-b border-white/5 hover:bg-white/[0.02] transition-all px-4 md:px-2 group bg-white/[0.02] md:bg-transparent rounded-lg md:rounded-none">
-                
                 <div class="w-full md:col-span-2 flex justify-between items-center md:block">
                     <span class="text-[11px] text-zinc-500 font-mono">${data}</span>
                     <span class="md:hidden text-[9px] uppercase tracking-widest border px-2 py-0.5 rounded-full font-bold ${statoClass}">${stato}</span>
                 </div>
-
                 <div class="w-full md:col-span-5 mt-2 md:mt-0">
                     <div class="flex flex-wrap gap-2 md:gap-1">
                         ${prodotti.map(p => `
@@ -354,17 +491,14 @@ window.openOrdersModal = async () => {
                         `).join('')}
                     </div>
                 </div>
-
                 <div class="hidden md:block col-span-2 text-center">
                     <span class="text-[9px] uppercase tracking-widest border px-3 py-1 rounded-full font-bold ${statoClass}">${stato}</span>
                 </div>
-
                 <div class="w-full md:contents flex justify-between items-end mt-4 md:mt-0 border-t border-white/5 md:border-0 pt-3 md:pt-0">
                     <div class="md:col-span-1 text-left md:text-center">
-                         <span class="text-[9px] text-zinc-600 md:hidden uppercase mr-2">Metodo:</span>
-                         <span class="text-[10px] text-zinc-500 uppercase">${o.metodo_consegna === 'ritiro' ? 'Ritiro' : 'Consegna'}</span>
+                        <span class="text-[9px] text-zinc-600 md:hidden uppercase mr-2">Metodo:</span>
+                        <span class="text-[10px] text-zinc-500 uppercase">${o.metodo_consegna === 'ritiro' ? 'Ritiro' : 'Consegna'}</span>
                     </div>
-
                     <div class="md:col-span-2 text-right">
                         <span class="text-gold font-sans font-bold tracking-tighter text-sm md:text-base">€ ${o.prezzo_finale.toLocaleString()}</span>
                     </div>
@@ -375,7 +509,15 @@ window.openOrdersModal = async () => {
 };
 
 window.closeOrdersModal = () => document.getElementById('orders-modal').classList.add('hidden');
-window.closeCheckout = () => document.getElementById('checkout-modal').classList.add('hidden');
+window.closeCheckout = () => {
+    document.getElementById('checkout-modal').classList.add('hidden');
+    scontoAttivo = 0;
+    usatoScontoInSessione = false;
+    const msg = document.getElementById('fidelity-msg');
+    const label = document.getElementById('discount-applied-label');
+    if(msg) msg.classList.add('hidden');
+    if(label) label.classList.add('hidden');
+};
 
 if (window.location.pathname.includes('catalogo.html')) {
     initCatalogo();

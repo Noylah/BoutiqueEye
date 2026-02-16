@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fidelity - Boutique Eye</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a0a; color: white; }
+        .font-serif { font-family: 'Cinzel', serif; }
+        .text-gold { color: #d4af37; }
+        .border-gold { border-color: #d4af37; }
+        .bg-gold { background-color: #d4af37; }
+        .fidelity-card { background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%); border: 1px solid rgba(212, 175, 55, 0.2); }
+        .progress-glow { box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .code-display { letter-spacing: 0.5em; text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="flex justify-between items-center px-6 md:px-12 py-6 border-b border-white/10">
+        <div class="text-xl md:text-2xl font-serif tracking-widest uppercase">
+            Boutique<span class="text-gold">Eye</span>
+        </div>
+        <nav class="hidden md:flex space-x-8 text-xs tracking-widest uppercase text-gray-400">
+            <a href="catalogo.html" class="hover:text-gold transition">Collezioni</a>
+            <a href="fidelity.html" class="text-gold border-b border-gold pb-1">Fidelity</a>
+        </nav>
+        <div class="flex items-center">
+            <a href="catalogo.html" class="text-[10px] tracking-[0.2em] uppercase text-gold hover:text-white transition">
+                &lsaquo; Torna al Catalogo
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-12 md:py-20 fade-in">
+        <div class="text-center mb-16">
+            <h1 class="font-serif italic text-3xl md:text-5xl text-gold mb-4">Fidelity Club</h1>
+            <p class="text-[10px] md:text-xs uppercase tracking-[0.4em] text-zinc-500">Il lusso di essere ricompensati</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+            <div class="lg:col-span-2 fidelity-card p-8 md:p-12 relative overflow-hidden shadow-2xl">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                <div class="relative z-10">
+                    <div class="flex flex-col md:flex-row md:items-center gap-6 mb-12">
+                        <div class="w-20 h-20 md:w-24 md:h-24 border border-gold/30 p-1 bg-zinc-900 shadow-2xl">
+                            <img id="user-avatar" src="" alt="User" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700">
+                        </div>
+                        <div>
+                            <p id="level-tag" class="text-gold text-[10px] uppercase tracking-[0.3em] mb-1">Membro Bronzo</p>
+                            <h2 id="user-name" class="font-serif text-3xl text-white italic">Caricamento...</h2>
+                        </div>
+                    </div>
+                    <div class="mb-12">
+                        <div class="flex items-end gap-3 mb-4">
+                            <span id="user-points" class="text-6xl md:text-7xl font-light tracking-tighter text-white">0</span>
+                            <span class="text-gold uppercase tracking-[0.2em] text-xs mb-3 font-semibold">Punti Accumulati</span>
+                        </div>
+                        <div class="w-full bg-white/5 h-[1px] relative">
+                            <div id="progress-bar" class="absolute top-0 left-0 h-[2px] bg-gold progress-glow transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between mt-4 text-[10px] uppercase tracking-widest text-zinc-500">
+                            <span>Progresso Status</span>
+                            <span id="next-level-info">Prossimo step: 500 Pts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="space-y-6">
+                <h3 class="font-serif text-gold text-xl italic mb-6 border-b border-gold/10 pb-4">Il Tuo Codice</h3>
+                <div id="benefits-list" class="space-y-4">
+                    <div id="coupon-card" class="bg-zinc-900/50 border border-white/10 p-8 text-center transition-all duration-500">
+                        <span id="coupon-status-badge" class="text-[8px] px-2 py-1 bg-zinc-800 text-zinc-500 font-bold uppercase tracking-widest mb-6 inline-block">Verifica in corso...</span>
+                        
+                        <div class="mb-6">
+                            <p id="fidelity-code-display" class="text-2xl text-white font-mono code-display mb-2 uppercase">-------</p>
+                            <p id="active-discount" class="text-xs text-gold uppercase tracking-widest">Sconto Attuale: 0%</p>
+                        </div>
+
+                        <button onclick="copyCode()" class="w-full py-3 border border-gold/20 text-gold text-[9px] uppercase tracking-[0.2em] hover:bg-gold hover:text-black transition-all">Copia Codice</button>
+                        
+                        <p class="text-[9px] uppercase tracking-[0.15em] text-zinc-500 mt-6 leading-relaxed">
+                            Valido su <span class="text-white">5 articoli</span>.<br>Utilizzabile ogni 7 giorni.
+                        </p>
+
+                        <p id="coupon-timer" class="text-[9px] text-orange-500 mt-4 uppercase tracking-widest hidden">
+                            Disponibile tra: <span id="days-left" class="text-white font-bold"></span> giorni
+                        </p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <div class="mt-24">
+            <h3 class="font-serif text-center text-2xl text-gold mb-12">Gradi di Prestigio</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="border border-white/5 p-8 text-center hover:border-gold/30 transition-colors group">
+                    <p class="text-zinc-500 text-[9px] uppercase tracking-widest mb-4 group-hover:text-gold">Bronzo</p>
+                    <p class="text-white text-xs font-serif uppercase tracking-tighter">0 Pts</p>
+                    <div class="h-[1px] w-4 bg-gold/30 mx-auto my-4"></div>
+                    <p class="text-gold text-[10px] font-bold">Base</p>
+                </div>
+                <div class="border border-white/5 p-8 text-center hover:border-gold/30 transition-colors group">
+                    <p class="text-zinc-500 text-[9px] uppercase tracking-widest mb-4 group-hover:text-gold">Argento</p>
+                    <p class="text-white text-xs font-serif uppercase tracking-tighter">500 Pts</p>
+                    <div class="h-[1px] w-4 bg-gold/30 mx-auto my-4"></div>
+                    <p class="text-gold text-[10px] font-bold">5% Sconto</p>
+                </div>
+                <div class="border border-white/5 p-8 text-center hover:border-gold/30 transition-colors group">
+                    <p class="text-zinc-500 text-[9px] uppercase tracking-widest mb-4 group-hover:text-gold">Oro</p>
+                    <p class="text-white text-xs font-serif uppercase tracking-tighter">1000 Pts</p>
+                    <div class="h-[1px] w-4 bg-gold/30 mx-auto my-4"></div>
+                    <p class="text-gold text-[10px] font-bold">10% Sconto</p>
+                </div>
+                <div class="border border-white/5 p-8 text-center hover:border-gold/30 transition-colors group">
+                    <p class="text-zinc-500 text-[9px] uppercase tracking-widest mb-4 group-hover:text-gold">Platino</p>
+                    <p class="text-white text-xs font-serif uppercase tracking-tighter">2500 Pts</p>
+                    <div class="h-[1px] w-4 bg-gold/30 mx-auto my-4"></div>
+                    <p class="text-gold text-[10px] font-bold">15% Sconto</p>
+                </div>
+                <div class="border border-white/5 p-8 text-center hover:border-gold/30 transition-colors group">
+                    <p class="text-zinc-500 text-[9px] uppercase tracking-widest mb-4 group-hover:text-gold">Diamante</p>
+                    <p class="text-white text-xs font-serif uppercase tracking-tighter">5000 Pts</p>
+                    <div class="h-[1px] w-4 bg-gold/30 mx-auto my-4"></div>
+                    <p class="text-gold text-[10px] font-bold">20% Sconto</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+        const supabase = createClient(supabaseUrl, supabaseKey)
+
+        const LIVELLI = [
+            { nome: 'Bronzo', soglia: 0, sconto: 0, next: 500 },
+            { nome: 'Argento', soglia: 500, sconto: 5, next: 1000 },
+            { nome: 'Oro', soglia: 1000, sconto: 10, next: 2500 },
+            { nome: 'Platino', soglia: 2500, sconto: 15, next: 5000 },
+            { nome: 'Diamante', soglia: 5000, sconto: 20, next: null }
+        ];
+
+        function isScontoDisponibile(ultimoUtilizzo) {
+            if (!ultimoUtilizzo) return true;
+            const ultimaData = new Date(ultimoUtilizzo);
+            const oggi = new Date();
+            const diffDays = (oggi - ultimaData) / (1000 * 60 * 60 * 24);
+            return diffDays >= 7;
+        }
+
+        window.copyCode = () => {
+            const code = document.getElementById('fidelity-code-display').innerText;
+            navigator.clipboard.writeText(code);
+            const btn = event.target;
+            const original = btn.innerText;
+            btn.innerText = "COPIATO";
+            setTimeout(() => btn.innerText = original, 2000);
+        }
+
+        async function initFidelity() {
+            const session = localStorage.getItem('user_session');
+            if (!session) { window.location.href = 'index.html'; return; }
+            const localUser = JSON.parse(session);
+            const { data: user } = await supabase.from('profili').select('*').eq('id', localUser.id).single();
+            
+            if (user) {
+                document.getElementById('user-name').innerText = user.rp_nome_cognome;
+                document.getElementById('user-avatar').src = `https://nmsr.nickac.dev/face/${user.mc_nickname}`;
+                document.getElementById('fidelity-code-display').innerText = user.codice_sconto_fidelity || 'NON GENERATO';
+                
+                const punti = user.punti_totali || 0;
+                document.getElementById('user-points').innerText = punti.toLocaleString();
+                const livelloAttuale = [...LIVELLI].reverse().find(l => punti >= l.soglia);
+                document.getElementById('level-tag').innerText = `Membro ${livelloAttuale.nome}`;
+                document.getElementById('active-discount').innerText = `Sconto Attuale: ${livelloAttuale.sconto}%`;
+
+                if (livelloAttuale.next) {
+                    const progresso = (punti / livelloAttuale.next) * 100;
+                    document.getElementById('progress-bar').style.width = `${Math.min(progresso, 100)}%`;
+                    document.getElementById('next-level-info').innerText = `Prossimo step: ${livelloAttuale.next} Pts`;
+                } else {
+                    document.getElementById('progress-bar').style.width = '100%';
+                    document.getElementById('next-level-info').innerText = 'Status Massimo Raggiunto';
+                }
+
+                const badge = document.getElementById('coupon-status-badge');
+                const card = document.getElementById('coupon-card');
+                const timerMsg = document.getElementById('coupon-timer');
+                
+                if (isScontoDisponibile(user.ultimo_sconto_usato)) {
+                    badge.innerText = "Attivo";
+                    badge.className = "text-[8px] px-2 py-1 bg-gold text-black font-bold uppercase tracking-widest";
+                    card.classList.add('border-gold/40');
+                } else {
+                    const prossimaData = new Date(user.ultimo_sconto_usato);
+                    prossimaData.setDate(prossimaData.getDate() + 7);
+                    const giorniMancanti = Math.ceil((prossimaData - new Date()) / (1000 * 60 * 60 * 24));
+                    badge.innerText = "In Cooldown";
+                    badge.className = "text-[8px] px-2 py-1 bg-zinc-800 text-zinc-500 font-bold uppercase tracking-widest";
+                    timerMsg.classList.remove('hidden');
+                    document.getElementById('days-left').innerText = giorniMancanti;
+                }
+            }
+        }
+        initFidelity();
+    </script>
+</body>
+</html>
