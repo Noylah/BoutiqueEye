@@ -63,12 +63,39 @@ const handleStaffLogin = async (nickname, password) => {
             password: password,
         });
         if (error) throw error;
+
+        const role = data.user.user_metadata.role || 'manager'; 
+        
         localStorage.setItem('staff_session', JSON.stringify(data.session));
+        localStorage.setItem('staff_role', role);
+
         window.location.href = 'dashboard-staff.html';
     } catch (error) {
         showStatus("Accesso Staff negato: " + error.message);
     }
 };
+
+function applyPermissions() {
+    const role = localStorage.getItem('staff_role');
+    
+    const sezOrdini = document.getElementById('section-orders');
+    const sezBilancio = document.getElementById('section-finance');
+    const sezStaff = document.getElementById('section-staff-management');
+
+    if (role === 'contabile') {
+        if(sezOrdini) sezOrdini.classList.add('hidden');
+        if(sezStaff) sezStaff.classList.add('hidden');
+        if(sezBilancio) sezBilancio.classList.remove('hidden');
+    } 
+    else if (role === 'manager' || role === 'vice_direttore') {
+        if(sezBilancio) sezBilancio.classList.add('hidden');
+        if(sezStaff) sezStaff.classList.add('hidden');
+        if(sezOrdini) sezOrdini.classList.remove('hidden');
+    }
+    else if (role === 'direttore') {
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('hidden'));
+    }
+}
 
 const authForm = document.getElementById('auth-form');
 if (authForm) {
@@ -83,24 +110,46 @@ if (authForm) {
             return;
         }
 
-        const codice = generaCodice();
+        const codiceGenerato = generaCodice();
         const btn = authForm.querySelector('button[type="submit"]');
         btn.disabled = true; btn.innerText = "ATTENDERE...";
+
         try {
             let userId = null;
+
             if (mode === 'login') {
-                const { data, error } = await supabase.from('profili').update({ codice_verifica: codice, sessione_attiva: false }).eq('mc_nickname', mcNick).select();
-                if (error || !data.length) throw new Error("Utente non trovato.");
-                userId = data[0].id;
+                const { data: users } = await supabase.from('profili').select('id').ilike('mc_nickname', mcNick);
+                if (!users || users.length === 0) throw new Error("Utente non trovato.");
+                userId = users[0].id;
+
+                // RESET MANUALE PRIMA DI PARTIRE
+                const { error: resetErr } = await supabase
+                    .from('profili')
+                    .update({ codice_verifica: codiceGenerato, sessione_attiva: false })
+                    .eq('id', userId);
+                
+                if (resetErr) throw new Error("Errore reset sessione.");
+
             } else {
+                // REGISTRAZIONE
                 const rpName = document.getElementById('rp-full-name')?.value.trim();
                 const tgUser = document.getElementById('tg-user')?.value.trim();
-                const { data, error } = await supabase.from('profili').insert([{ mc_nickname: mcNick, rp_nome_cognome: rpName, telegram_username: tgUser, codice_verifica: codice, sessione_attiva: false }]).select();
+                const { data, error } = await supabase.from('profili').insert([{ 
+                    mc_nickname: mcNick, 
+                    rp_nome_cognome: rpName, 
+                    telegram_username: tgUser, 
+                    codice_verifica: codiceGenerato, 
+                    sessione_attiva: false 
+                }]).select();
                 if (error) throw new Error("Errore registrazione.");
                 userId = data[0].id;
             }
-            showStatus(`Codice: <b>${codice}</b>. Invialo al bot Telegram @VerificaBoutiqueEyeBot.`, 'status');
-            avviaPolling(userId);
+
+            showStatus(`Codice: <b>${codiceGenerato}</b>. Invialo al bot @VerificaBoutiqueEyeBot.`, 'status');
+            
+            // Passiamo il codice appena generato al polling per un controllo DOPPIO
+            avviaPolling(userId, codiceGenerato);
+
         } catch (err) {
             btn.disabled = false; btn.innerText = "CONFERMA";
             showStatus(err.message);
@@ -108,14 +157,42 @@ if (authForm) {
     });
 }
 
-async function avviaPolling(userId) {
+async function avviaPolling(userId, codiceAppenaGenerato) {
+    console.log("=== POLLING BLINDATO AVVIATO ===");
+    console.log("ID Utente:", userId);
+    console.log("Codice che DEVE essere nel DB:", codiceAppenaGenerato);
+    
     const timer = setInterval(async () => {
-        const { data } = await supabase.from('profili').select('codice_verifica, sessione_attiva').eq('id', userId).single();
-        if (data && data.sessione_attiva && !data.codice_verifica) {
+        const { data, error } = await supabase
+            .from('profili')
+            .select('codice_verifica, sessione_attiva')
+            .eq('id', userId)
+            .single();
+
+        if (error) return;
+
+        // LOG DI DEBUG PER CAPIRE CHI SBAGLIA
+        console.log("Controllo DB... Codice trovato:", data.codice_verifica, "Sessione:", data.sessione_attiva);
+
+        // LA LOGICA INVALICABILE:
+        // Entri SOLO SE la sessione è true E il codice è sparito (NULL) o svuotato dal Bot.
+        // Se la sessione è true ma il codice è ancora quello vecchio (codiceAppenaGenerato),
+        // significa che è un vecchio login rimasto appeso e il sito DEVE IGNORARLO.
+        
+        const botHaEffettivamenteAgito = data.sessione_attiva === true && 
+                                       (data.codice_verifica === null || data.codice_verifica === "");
+
+        if (botHaEffettivamenteAgito) {
+            console.log("!!! ACCESSO LEGITTIMO RILEVATO !!!");
             clearInterval(timer);
+            
             const { data: user } = await supabase.from('profili').select('*').eq('id', userId).single();
             localStorage.setItem('user_session', JSON.stringify(user));
-            window.location.href = 'catalogo.html';
+            
+            showStatus("Verifica riuscita!", "status");
+            setTimeout(() => window.location.href = 'catalogo.html', 500);
+        } else {
+            console.log("In attesa del Bot... (Se leggi Sessione: true qui, il Bot sta sbagliando)");
         }
     }, 2000);
 }
@@ -175,8 +252,20 @@ async function initCatalogo() {
         renderProducts(allProducts); 
         initFilters();
     }
-    document.getElementById('logout-btn').onclick = () => { localStorage.removeItem('user_session'); window.location.href = 'index.html'; };
+    document.getElementById('logout-btn').onclick = async () => {
+    const session = localStorage.getItem('user_session');
+    if (session) {
+        const user = JSON.parse(session);
+        await supabase
+            .from('profili')
+            .update({ sessione_attiva: false, codice_verifica: null })
+            .eq('id', user.id);
+    }
+    localStorage.removeItem('user_session');
+    window.location.href = 'index.html';
+};
 }
+
 
 function renderProducts(list) {
     const grid = document.getElementById('catalog-grid');
@@ -259,7 +348,15 @@ window.openProduct = (product) => {
     document.getElementById('product-modal').classList.remove('hidden');
 };
 
-window.closeModal = () => document.getElementById('product-modal').classList.add('hidden');
+window.closeModal = () => {
+    const productModal = document.getElementById('product-modal');
+    const authModal = document.getElementById('modal-wrapper'); 
+    
+    if (productModal) productModal.classList.add('hidden');
+    if (authModal) authModal.classList.add('hidden');
+    
+    currentProduct = null;
+};
 
 window.addToCart = () => {
     if (!currentProduct) return;

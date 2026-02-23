@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - Boutique Eye</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a0a; color: white; overflow-x: hidden; }
+        .font-serif { font-family: 'Cinzel', serif; }
+        .text-gold { color: #d4af37; }
+        .border-gold { border-color: #d4af37; }
+        .bg-gold { background-color: #d4af37; }
+        .glass-card { background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(212, 175, 55, 0.1); }
+        .sidebar-item { border-left: 2px solid transparent; transition: all 0.3s; }
+        .sidebar-item.active { border-left: 2px solid #d4af37; background: rgba(212, 175, 55, 0.05); color: #d4af37; }
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s; }
+        tr:hover { background: rgba(212, 175, 55, 0.02); }
+        .status-badge { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 2px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #d4af37; }
+    </style>
+</head>
+<body class="flex h-screen antialiased">
+
+    <aside class="w-72 border-r border-white/10 flex flex-col bg-[#080808]">
+        <div class="p-10">
+            <div class="font-serif text-lg tracking-widest uppercase">
+                Boutique<span class="text-gold">Eye</span>
+                <p class="text-[8px] tracking-[0.4em] text-zinc-500 mt-1">Management</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-6 space-y-4">
+            <button onclick="switchTab('orders')" id="btn-orders" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-gold active">
+                Registro Ordini
+            </button>
+            <button onclick="switchTab('finance')" id="btn-finance" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-gold hidden-role" data-role="direttore,contabile">
+                Bilancio & Conti
+            </button>
+            <button onclick="switchTab('team')" id="btn-team" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-gold hidden-role" data-role="direttore">
+                Gestione Staff
+            </button>
+        </nav>
+
+        <div class="p-8 border-t border-white/5">
+            <div class="flex items-center gap-4 mb-6">
+                <div id="staff-avatar" class="w-10 h-10 border border-gold/30 p-1 bg-zinc-900">
+                    <img id="staff-img" src="" class="w-full h-full object-cover grayscale">
+                </div>
+                <div>
+                    <p id="staff-name" class="font-serif text-sm text-white italic">---</p>
+                    <p id="staff-role-label" class="text-[8px] text-gold uppercase tracking-widest">Ruolo</p>
+                </div>
+            </div>
+            <button onclick="logoutStaff()" class="text-[9px] uppercase text-zinc-600 hover:text-gold transition-colors tracking-[0.2em]">Scollegati</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-[#0a0a0a] p-12">
+        
+        <section id="sec-orders" class="tab-content fade-in">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+    <div>
+        <h2 class="font-serif text-3xl text-gold italic">Ordini Ricevuti</h2>
+        <div class="h-[1px] w-12 bg-gold/30 mt-4"></div>
+    </div>
+    
+    <div class="flex flex-wrap gap-4 w-full md:w-auto">
+        <div class="flex border border-white/10 p-1 bg-zinc-900/30">
+            <button onclick="filterByStatus('tutti')" class="filter-btn active px-4 py-2 text-[9px] uppercase tracking-widest text-zinc-500 hover:text-gold transition-all">Tutti</button>
+            <button onclick="filterByStatus('In Preparazione')" class="filter-btn px-4 py-2 text-[9px] uppercase tracking-widest text-zinc-500 hover:text-gold transition-all">Da Fare</button>
+            <button onclick="filterByStatus('Pronto')" class="filter-btn px-4 py-2 text-[9px] uppercase tracking-widest text-zinc-500 hover:text-gold transition-all">Pronti</button>
+        </div>
+        <input type="text" id="search-orders" placeholder="CERCA CLIENTE..." class="bg-transparent border-b border-white/10 px-4 py-2 text-[10px] tracking-widest uppercase focus:border-gold outline-none transition-all w-full md:w-64">
+    </div>
+</header>
+
+            <div class="glass-card rounded-sm overflow-hidden shadow-2xl">
+                <table class="w-full text-left">
+                    <thead class="bg-zinc-900/50 text-[9px] uppercase tracking-[0.2em] text-gold/60 border-b border-white/5">
+                        <tr>
+                            <th class="p-6 font-normal">Data</th>
+                            <th class="p-6 font-normal">Cliente RP</th>
+                            <th class="p-6 font-normal">Nickname MC</th>
+                            <th class="p-6 font-normal">Totale</th>
+                            <th class="p-6 font-normal">Stato</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body" class="text-[11px] tracking-wide"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="sec-finance" class="tab-content hidden fade-in">
+            <h2 class="font-serif text-3xl text-gold italic mb-16">Resoconto Finanziario</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-card p-10 border-gold/20">
+                    <p class="text-[9px] uppercase tracking-[0.3em] text-zinc-500 mb-4">Volume d'Affari</p>
+                    <h3 id="total-revenue" class="font-serif text-4xl text-white">€ 0</h3>
+                    <div class="h-[1px] w-full bg-gold/10 mt-6"></div>
+                    <p class="text-[8px] text-gold uppercase mt-4">Solo ordini consegnati</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-team" class="tab-content hidden fade-in">
+            <h2 class="font-serif text-3xl text-gold italic mb-16">Gestione Personale</h2>
+            <div class="glass-card p-10 text-center border-dashed border-gold/10">
+                <p class="text-[10px] uppercase tracking-widest text-zinc-500">Modulo autorizzazioni in fase di sviluppo</p>
+            </div>
+        </section>
+    </main>
+
+    <div id="order-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 hidden flex items-center justify-center p-6">
+        <div class="glass-card w-full max-w-2xl p-12 relative shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+            <button onclick="closeModal()" class="absolute top-6 right-8 text-zinc-500 hover:text-gold text-xl transition-colors">✕</button>
+            <div id="modal-content"></div>
+            <div id="order-actions" class="mt-12 grid grid-cols-3 gap-4">
+                <button onclick="updateStatus('Pronto')" class="py-4 border border-gold/20 text-gold text-[9px] uppercase tracking-[0.2em] hover:bg-gold hover:text-black transition-all">Pronto</button>
+                <button onclick="updateStatus('Consegnato')" class="py-4 bg-gold text-black text-[9px] uppercase tracking-[0.2em] font-bold hover:bg-white transition-all">Consegnato</button>
+                <button onclick="updateStatus('Rifiutato')" class="py-4 border border-red-900/30 text-red-500 text-[9px] uppercase tracking-[0.2em] hover:bg-red-900/20 transition-all">Rifiuta</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+        const supabase = createClient(supabaseUrl, supabaseKey)
+
+        let ordersData = [];
+        let currentOrderId = null;
+
+        async function initDashboard() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if(!user || !user.email.endsWith('@boutiqueye.it')) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const role = user.user_metadata.role || 'manager';
+            const nick = user.email.split('@')[0];
+            document.getElementById('staff-name').innerText = nick.charAt(0).toUpperCase() + nick.slice(1);
+            document.getElementById('staff-role-label').innerText = role;
+            document.getElementById('staff-img').src = `https://nmsr.nickac.dev/face/${nick}`;
+
+            document.querySelectorAll('.hidden-role').forEach(el => {
+                const allowed = el.getAttribute('data-role').split(',');
+                if(!allowed.includes(role)) el.classList.add('hidden');
+            });
+
+            loadOrders();
+            setupSearch();
+        }
+
+        function setupSearch() {
+            document.getElementById('search-orders').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = ordersData.filter(o => 
+                    o.profili?.mc_nickname.toLowerCase().includes(term) || 
+                    o.profili?.rp_nome_cognome.toLowerCase().includes(term)
+                );
+                renderOrders(filtered);
+            });
+        }
+
+        window.switchTab = (tab) => {
+            document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+            document.getElementById(`sec-${tab}`).classList.remove('hidden');
+            document.getElementById(`btn-${tab}`).classList.add('active');
+        };
+
+        async function loadOrders() {
+            const { data, error } = await supabase
+                .from('ordini')
+                .select(`*, profili(mc_nickname, rp_nome_cognome)`)
+                .order('created_at', { ascending: false });
+
+            if(data) {
+                ordersData = data;
+                renderOrders(data);
+                calculateFinance(data);
+            }
+        }
+
+        function renderOrders(list) {
+            const body = document.getElementById('orders-table-body');
+            body.innerHTML = list.map(o => `
+                <tr onclick="openOrder('${o.id}')" class="cursor-pointer">
+                    <td class="p-6 text-zinc-600 font-mono">${new Date(o.created_at).toLocaleDateString()}</td>
+                    <td class="p-6 text-white uppercase tracking-wider">${o.profili?.rp_nome_cognome || '---'}</td>
+                    <td class="p-6 text-gold font-mono">@${o.profili?.mc_nickname || '---'}</td>
+                    <td class="p-6 text-white font-semibold">€ ${o.prezzo_finale.toLocaleString()}</td>
+                    <td class="p-6">${getStatusBadge(o.stato)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusBadge(s) {
+            const style = s === 'Pronto' ? 'bg-blue-500/10 text-blue-400' : 
+                          s === 'Consegnato' ? 'bg-gold/10 text-gold' : 
+                          s === 'Rifiutato' ? 'bg-red-500/10 text-red-400' : 'bg-zinc-800 text-zinc-500';
+            return `<span class="status-badge ${style}">${s || 'In Preparazione'}</span>`;
+        }
+
+window.openOrder = (id) => {
+    const order = ordersData.find(o => o.id === id);
+    currentOrderId = id;
+    
+    const isRitiro = order.metodo_consegna === 'ritiro';
+    
+        document.getElementById('modal-content').innerHTML = `
+            <div class="flex justify-between items-start mb-10">
+            <div>
+                <p class="text-[8px] text-gold uppercase tracking-[0.4em] mb-2">Scheda Ordine Digitale</p>
+                <h3 class="font-serif text-3xl text-white italic">${order.profili.rp_nome_cognome}</h3>
+            </div>
+            <div class="text-right">
+                <p class="text-[8px] text-zinc-500 uppercase tracking-widest">Metodo</p>
+                <p class="text-[10px] ${isRitiro ? 'text-blue-400' : 'text-emerald-400'} uppercase tracking-widest font-bold mt-1">
+                    ${isRitiro ? 'Ritiro in Sede' : 'Consegna a Domicilio'}
+                </p>
+            </div>
+        </div>
+        
+        <div class="bg-white/[0.02] border border-white/5 p-6 mb-8">
+            <p class="text-[8px] text-zinc-500 uppercase tracking-widest mb-4">Articoli nel pacco</p>
+            <div class="space-y-4">
+                ${order.lista_prodotti.map(p => `
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-white uppercase text-[10px] tracking-wider">
+                            <span class="text-gold mr-2">x${p.quantita}</span> ${p.nome}
+                        </span>
+                        <span class="font-mono text-zinc-400 text-xs">€ ${(p.prezzo * p.quantita).toLocaleString()}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+
+        ${!isRitiro ? `
+            <div class="mb-8 p-4 border-l-2 border-emerald-500/30 bg-emerald-500/5">
+                <p class="text-[8px] text-emerald-500/70 uppercase tracking-widest mb-1">Coordinate Consegna</p>
+                <p class="text-xs text-white font-mono">${order.indirizzo_coordinate || 'Non specificate'}</p>
+            </div>
+        ` : ''}
+
+        <div class="flex justify-between items-center border-t border-gold/20 pt-8">
+            <div>
+                <p class="text-[8px] text-zinc-500 uppercase tracking-widest">Totale Transazione</p>
+                <p class="text-2xl font-serif text-white">€ ${order.prezzo_finale.toLocaleString()}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-[8px] text-zinc-500 uppercase tracking-widest">Punti Generati</p>
+                <p class="text-gold font-bold">+${order.punti_generati || 0} PTS</p>
+            </div>
+        </div>
+        `;
+        document.getElementById('order-modal').classList.remove('hidden');
+    };
+
+        window.updateStatus = async (status) => {
+            const { error } = await supabase.from('ordini').update({ stato: status }).eq('id', currentOrderId);
+            if(!error) {
+                closeModal();
+                loadOrders();
+            }
+        };
+
+        window.closeModal = () => document.getElementById('order-modal').classList.add('hidden');
+
+        function calculateFinance(data) {
+            const total = data.filter(o => o.stato === 'Consegnato').reduce((acc, o) => acc + o.prezzo_finale, 0);
+            document.getElementById('total-revenue').innerText = `€ ${total.toLocaleString()}`;
+        }
+
+        window.logoutStaff = async () => {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        };
+
+        window.filterByStatus = (status) => {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('text-gold', 'border-gold/30', 'bg-gold/5');
+                if(btn.innerText.toLowerCase() === status.toLowerCase() || (status === 'tutti' && btn.innerText.toLowerCase() === 'tutti')) {
+                    btn.classList.add('text-gold');
+                }
+            });
+
+            const filtered = status === 'tutti' 
+                ? ordersData 
+                : ordersData.filter(o => (o.stato || 'In Preparazione') === status);
+            renderOrders(filtered);
+        };
+
+        initDashboard();
+        function subscribeOrders() {
+            supabase
+            .channel('schema-db-changes')
+            .on('postgres_changes', { event: '*', table: 'ordini' }, payload => {
+                console.log('Cambio rilevato, ricarico ordini...');
+                loadOrders(); 
+            })
+        .subscribe();
+}
+    </script>
+</body>
+</html>
